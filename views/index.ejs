@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>PeterWeatherApp</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body class="<%= locals.isNight ? 'night' : 'day' %>">
+
+  <main class="app">
+
+    <!-- Header -->
+    <header class="header">
+      <h1>PeterWeatherApp</h1>
+      <p>Accurate hourly forecasts, simplified</p>
+    </header>
+
+    <!-- Search -->
+    <section class="search">
+      <form action="/weather" method="POST">
+        <input type="text" name="location" placeholder="Enter city or location" required/>
+        <button type="submit">Get Forecast</button>
+      </form>
+    </section>
+
+    <!-- Error -->
+    <% if (locals.error) { %>
+      <div class="error">
+        <p><%= result %></p>
+      </div>
+    <% } %>
+
+    <!-- Weather Result -->
+    <% if (locals.weather && locals.location) { %>
+      <section class="weather-card">
+
+        <!-- Location -->
+        <div class="location">
+          <h2><%= location %></h2>
+        </div>
+
+        <!-- Current -->
+        <div class="current">
+          <span class="label">Now</span>
+          <div class="temp">
+            <%= weather.properties.timeseries[0].data.instant.details.air_temperature %>°C
+          </div>
+        </div>
+
+        <!-- Hourly -->
+        <div class="hourly">
+          <% Object.keys(groupedByDay).forEach(day => { %>
+            <h3><%= day %></h3>
+
+            <ul>
+              <% groupedByDay[day].slice(0, 24).forEach((entry, index) => { %>
+                <li class="hour-item">
+                  <span class="time"><%= entry.displayTime %></span>
+
+                  <img
+                    src="/icons/<%= entry.symbol %>.svg"
+                    alt="icon"
+                    onerror="this.src='/icons/cloudy.svg'"
+                    class="weather-icon"
+                  />
+                  <h6><%= entry.symbol %></h6>
+
+                  <span>
+                    <%= entry.data.instant.details.air_temperature %>°C
+                  </span>
+                </li>
+              <% }) %>
+            </ul>
+          <% }) %>
+
+        </div>
+      </section>
+    <% } %>
+
+  </main>
+
+</body>
+</html>

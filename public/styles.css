@@ -1,0 +1,221 @@
+/* ===============================
+   Global
+================================ */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+body.day {
+  background: linear-gradient(90deg, #cfe9ff, #ffffff);
+  color: #111;
+}
+
+body.night {
+  background: linear-gradient(#0f172a, #020617);
+  color: #e5e7eb;
+}
+
+body.night .weather-card, body.night h2, body.night .time, body.night h6, body.night h3, body.night .label{
+  background: #020617;
+  color: #e5e7eb;
+}
+
+
+.app {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+/* ===============================
+   Header
+================================ */
+
+.header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 600;
+}
+
+.header p {
+  margin-top: 0.25rem;
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+/* ===============================
+   Search
+================================ */
+
+.search form {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.search input {
+  flex: 1;
+  padding: 0.75rem;
+  border-radius: 12px;
+  border: none;
+  font-size: 1rem;
+}
+
+.search button {
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  border: none;
+  background-color: #3b82f6;
+  color: white;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.search button:hover {
+  background-color: #2563eb;
+}
+
+/* ===============================
+   Error
+================================ */
+
+.error {
+  margin-top: 1rem;
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 0.75rem;
+  border-radius: 10px;
+  text-align: center;
+}
+
+/* ===============================
+   Weather Card
+================================ */
+
+.weather-card {
+  margin-top: 1.5rem;
+  background: white;
+  border-radius: 18px;
+  padding: 1.25rem;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+}
+
+/* Location */
+
+.location h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #334155;
+}
+
+/* Current */
+
+.current {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1rem;
+}
+
+.current .label {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.current .temp {
+  font-size: 2.5rem;
+  font-weight: 600;
+}
+
+/* ===============================
+   Hourly
+================================ */
+
+.hourly {
+  margin-top: 1.25rem;
+}
+
+.hourly h3 {
+  font-size: 1.5rem;
+  color: #475569;
+  margin-bottom: 0.5rem;
+}
+
+.hourly ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.hourly li {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.hourly li:last-child {
+  border-bottom: none;
+}
+
+.hourly .time, .hourly h6 {
+  font-size: 0.9rem;
+  color: #475569;
+}
+
+.hourly .degree {
+  font-weight: 500;
+}
+
+
+
+
+.hour-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.hour-item:last-child {
+  border-bottom: none;
+}
+
+.hour-item .left {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.hour-item {
+  font-size: 1.2rem;
+}
+
+.weather-icon {
+
+width: 20px !important;
+height: 20pm !important;
+
+}
+
+
+/* ===============================
+   Responsive
+================================ */
+
+@media (min-width: 768px) {
+  .app {
+    max-width: 520px;
+  }
+}
