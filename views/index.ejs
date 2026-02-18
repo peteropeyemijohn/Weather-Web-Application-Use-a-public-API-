@@ -20,7 +20,7 @@
     <!-- Search -->
     <section class="search">
       <form action="/weather" method="POST">
-        <input type="text" name="location" placeholder="Enter city or location" required/>
+        <input type="text" name="location" placeholder= "<%= locals.noLocation ? noLocation : 'Enter city or location'%>" required/>
         <button type="submit">Get Forecast</button>
       </form>
     </section>

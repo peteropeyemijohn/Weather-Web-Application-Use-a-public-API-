@@ -1,21 +1,48 @@
 import express from "express"
 import axios from "axios"
 import bodyParser from "body-parser";
+import rateLimit from "express-rate-limit"
 
 
 const app = express();
-const port = 3000;
+app.set("trust proxy", 1); //enables express to see the real user IP for ratelimit//
+
+const PORT = process.env.PORT || 3000;
+
+
+const limiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 30, // max 30 requests per IP per minute
+  message: {
+    error: "Too many requests. Please slow down."
+  }
+});
+
 
 app.use(express.static("public"));
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(limiter);
+
+
+
+
+
+const axiosConfig = {
+      headers: { 
+            "User-Agent": "PeterWeatherApp/1.0 peteropeyemijohn@gmail.com"
+          }
+};
+
+
+let cache = {};
+const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
+
+
 
 
 app.get("/", (req, res) => {
   res.render("index.ejs");
 });
-
-
-
 
 
 app.post("/weather", async (req, res) => {
@@ -29,34 +56,42 @@ app.post("/weather", async (req, res) => {
           limit: 1,
           },
 
-          headers: { 
-            "User-Agent": "PeterWeatherApp/1.0 peteropeyemijohn@gmail.com"
-          }
+          ...axiosConfig
           
-        },
-        );
+        });
+        
 
-        console.log(geoResult.data); // to monitor API response in the console
         
   
         if (geoResult.data.length === 0) {
-         return res.render("index.ejs", {result: "Location not found"});
+         return res.render("index.ejs", {noLocation: "Location not found, try again"});
         }
 
 
         const lat = Number( Number(geoResult.data[0].lat).toFixed(4) );
         const lon = Number( Number(geoResult.data[0].lon).toFixed(4) );
 
-        console.log(lat, lon);
+        
+
+
+
+        const cacheKey = `${lat},${lon}`;
+        const now = Date.now();
+
+        // Check cache
+        if (cache[cacheKey] && (now - cache[cacheKey].timestamp < CACHE_DURATION)) {
+          console.log("Serving from cache");
+          return res.render("index.ejs", cache[cacheKey].data);
+        }
+
 
 
         const weatherResult = await axios.get("https://api.met.no/weatherapi/locationforecast/2.0/compact", {
 
           params: {lat, lon},
 
-          headers: { 
-            "User-Agent": "PeterWeatherApp/1.0 peteropeyemijohn@gmail.com"
-          }
+          ...axiosConfig
+
         });
 
 
@@ -69,17 +104,15 @@ app.post("/weather", async (req, res) => {
           timezone: "auto",
         },
 
-        headers: {
-          "User-Agent": "PeterWeatherApp/1.0 peteropeyemijohn@gmail.com"
-        }
+        ...axiosConfig
+
       });
 
-      console.log(timeZone.data.timezone);
 
 
         
 
-      // Weather result interpretation logic 
+      // Data processing layer
 
 
         const groupedByDay = {};
@@ -92,7 +125,7 @@ app.post("/weather", async (req, res) => {
           hour12: false
         });
 
-        const isNight = localHour >= 18 || localHour < 6;
+        const isNight = localHour >= 19 || localHour < 7;
 
 
 
@@ -107,10 +140,9 @@ app.post("/weather", async (req, res) => {
         tomorrow.setDate(today.getDate() + 1);
 
 
-
+        //Add extra properties needed for a Java Script object by tapping into existing values//
         weatherResult.data.properties.timeseries =
-        weatherResult.data.properties.timeseries.map(entry => {     //".map" is used to add extra properties needed for a Java Script object by tapping into the existing properties values//
-
+        weatherResult.data.properties.timeseries.map(entry => { 
         const date = new Date(entry.time);
         const entryDateString = date.toDateString();
 
@@ -173,20 +205,22 @@ app.post("/weather", async (req, res) => {
       });
 
 
+      const renderData = {
+        weather: weatherResult.data,
+        location: geoResult.data[0].display_name,
+        groupedByDay,
+        isNight
+      };
 
-        res.render("index.ejs", {
-          weather: weatherResult.data,
-          location: geoResult.data[0].display_name,
-          groupedByDay,
-          isNight,
 
-        });
+        // Save to cache
+        cache[cacheKey] = {
+          data: renderData,
+          timestamp: now
+        };
 
-        console.log(weatherResult.data);
-        console.log(weatherResult.data.properties.timeseries[0]);
-        console.log(weatherResult.data.properties.timeseries[0].data.instant); // to monitor API response in the console
-        console.log(weatherResult.data.properties.timeseries[0].data.next_1_hours);
-      
+        // Final render
+        res.render("index.ejs", renderData);
 
 
 
@@ -199,6 +233,6 @@ app.post("/weather", async (req, res) => {
 
 
 
-app.listen(port, () =>{
-  console.log(`Server is running on port ${port}`);
+app.listen(PORT, () =>{
+  console.log(`Server is running on port ${PORT}`);
 });
