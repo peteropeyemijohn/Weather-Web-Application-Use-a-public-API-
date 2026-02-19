@@ -29,7 +29,7 @@ app.use(limiter);
 
 const axiosConfig = {
       headers: { 
-            "User-Agent": "PeterWeatherApp/1.0 peteropeyemijohn@gmail.com"
+            "User-Agent": "Skycast/1.0 peteropeyemijohn@gmail.com"
           }
 };
 
