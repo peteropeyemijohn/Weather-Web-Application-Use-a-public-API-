@@ -1,40 +1,60 @@
 /* ===============================
-   Global
+   RESET & GLOBAL
 ================================ */
 
-* {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
   font-family: "Segoe UI", system-ui, sans-serif;
+  transition: background 0.3s ease, color 0.3s ease;
 }
+
+/* ===============================
+   THEME: DAY / NIGHT
+================================ */
 
 body.day {
   background: linear-gradient(90deg, #cfe9ff, #ffffff);
-  color: #111;
+  color: #020941;
 }
 
 body.night {
-  background: linear-gradient(#0f172a, #020617);
-  color: #e5e7eb;
+  background: linear-gradient(#000f36, #010e4d);
+  color: #ffffff;
 }
 
-body.night .weather-card, body.night h2, body.night .time, body.night h6, body.night h3, body.night .label{
+/* Scope night mode styling safely */
+body.night .weather-card {
   background: #020617;
+}
+
+body.night .weather-card h2,
+body.night .weather-card h3,
+body.night .weather-card h6,
+body.night .weather-card .time,
+body.night .weather-card .label,
+body.night .weather-card .temperature {
   color: #e5e7eb;
 }
 
+/* ===============================
+   APP CONTAINER
+================================ */
 
 .app {
+  width: 100%;
   max-width: 420px;
   margin: 0 auto;
   padding: 1.5rem;
 }
 
 /* ===============================
-   Header
+   HEADER
 ================================ */
 
 .header {
@@ -55,38 +75,116 @@ body.night .weather-card, body.night h2, body.night .time, body.night h6, body.n
 }
 
 /* ===============================
-   Search
+   SEARCH FORM
 ================================ */
 
-.search form {
+.form-wrapper {
   display: flex;
-  gap: 0.5rem;
+  gap: 12px;
+  justify-content: center;
+  align-items: stretch;
+  width: 100%;
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 0 16px;
 }
 
-.search input {
+.search-container {
+  position: relative;
   flex: 1;
-  padding: 0.75rem;
+}
+
+#locationInput {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 16px;
   border-radius: 12px;
   border: none;
-  font-size: 1rem;
+  outline: none;
+  box-sizing: border-box;
 }
 
-.search button {
-  padding: 0.75rem 1rem;
+/* Button */
+.form-wrapper button {
+  padding: 12px 18px;
+  font-size: 16px;
   border-radius: 12px;
   border: none;
   background-color: #3b82f6;
   color: white;
-  font-size: 0.95rem;
   cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s ease, transform 0.1s ease;
 }
 
-.search button:hover {
+.form-wrapper button:hover {
   background-color: #2563eb;
 }
 
+.form-wrapper button:active {
+  transform: scale(0.98);
+}
+
 /* ===============================
-   Error
+   DROPDOWN (Suggestions)
+================================ */
+
+.dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  max-height: 250px;
+  overflow-y: auto;
+  background: #ffffff;
+  border-radius: 10px;
+  margin-top: 6px;
+  padding: 0;
+  list-style: none;
+  z-index: 1000;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+
+  /* Animation base state */
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+  transition: all 0.15s ease;
+}
+
+/* When JS adds .show */
+.dropdown.show {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.dropdown li {
+  padding: 10px 14px;
+  cursor: pointer;
+  color: #000;
+  transition: background 0.45s ease;
+}
+
+.dropdown li:hover {
+  background: #f2f2f2;
+}
+
+/* Scrollbar Styling */
+.dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dropdown::-webkit-scrollbar-thumb {
+  background: #b5b5b5;
+  border-radius: 10px;
+}
+
+.dropdown::-webkit-scrollbar-thumb:hover {
+  background: #8a8a8a;
+}
+
+/* ===============================
+   ERROR
 ================================ */
 
 .error {
@@ -99,26 +197,32 @@ body.night .weather-card, body.night h2, body.night .time, body.night h6, body.n
 }
 
 /* ===============================
-   Weather Card
+   WEATHER CARD
 ================================ */
 
 .weather-card {
   margin-top: 1.5rem;
-  background: white;
+  background: #ffffff;
   border-radius: 18px;
   padding: 1.25rem;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+  transition: background 0.3s ease;
+}
+
+.list-padding {
+  padding:0.5rem;
 }
 
 /* Location */
-
 .location h2 {
   margin: 0;
   font-size: 1.1rem;
   color: #334155;
 }
 
-/* Current */
+/* ===============================
+   CURRENT WEATHER
+================================ */
 
 .current {
   display: flex;
@@ -138,7 +242,7 @@ body.night .weather-card, body.night h2, body.night .time, body.night h6, body.n
 }
 
 /* ===============================
-   Hourly
+   HOURLY FORECAST
 ================================ */
 
 .hourly {
@@ -146,39 +250,10 @@ body.night .weather-card, body.night h2, body.night .time, body.night h6, body.n
 }
 
 .hourly h3 {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   color: #475569;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
 }
-
-.hourly ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.hourly li {
-  display: flex;
-  justify-content: space-between;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.hourly li:last-child {
-  border-bottom: none;
-}
-
-.hourly .time, .hourly h6 {
-  font-size: 0.9rem;
-  color: #475569;
-}
-
-.hourly .degree {
-  font-weight: 500;
-}
-
-
-
 
 .hour-item {
   display: flex;
@@ -186,36 +261,86 @@ body.night .weather-card, body.night h2, body.night .time, body.night h6, body.n
   align-items: center;
   padding: 0.6rem 0;
   border-bottom: 1px solid #e5e7eb;
+  font-size: 1.1rem;
+  color: #475569;
 }
 
 .hour-item:last-child {
   border-bottom: none;
 }
 
-.hour-item .left {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.hour-item {
+.hour-item .temperature {
   font-size: 1.2rem;
 }
 
 .weather-icon {
-
-width: 20px !important;
-height: 20pm !important;
-
+  width: 20px !important;
+  height: 20px !important;
 }
 
 
 /* ===============================
-   Responsive
+   FOOTER CREDIT
 ================================ */
 
+.app-footer {
+  text-align: center;
+  font-size: 0.8rem;
+  opacity: 0.6;
+  margin-top: 40px;
+  padding-bottom: 20px;
+}
+
+.app-footer:hover {
+  opacity: 0.9;
+  transition: opacity 0.3s ease;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app {
+  flex: 1;
+}
+
+
+
+/* ===============================
+   RESPONSIVE DESIGN
+================================ */
+
+/* Mobile */
+@media (max-width: 767px) {
+  .form-wrapper {
+    flex-direction: column;
+  }
+
+  .form-wrapper button {
+    width: 100%;
+  }
+
+  .app {
+    padding: 1rem;
+  }
+
+  .weather-card{
+    padding: 0.5rem;
+  }
+}
+
+/* Tablet/Desktop */
 @media (min-width: 768px) {
   .app {
     max-width: 520px;
+  }
+}
+
+/* Large Desktop */
+@media (min-width: 1024px) {
+  .app {
+    max-width: 650px;
   }
 }

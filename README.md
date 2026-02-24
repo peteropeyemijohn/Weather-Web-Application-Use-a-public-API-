@@ -30,7 +30,7 @@ This application follows a structured backend request lifecycle:
 - User submits a city through the frontend form.
 
 ### 2️⃣ Geocoding Layer
-- The server sends a request to the **Nominatim OpenStreetMap API**.
+- The server sends a request to the **Open-Meteo API**.
 - Retrieves precise latitude and longitude coordinates.
 
 ### 3️⃣ Cache & Rate Control Layer
@@ -68,7 +68,7 @@ This application follows a structured backend request lifecycle:
 - EJS (Server-side templating)
 
 **APIs:**
-- Nominatim OpenStreetMap (Geocoding)
+- Open-Meteo (Geocoding)
 - Open-Meteo (Timezone)
 - MET Norway Weather API (Forecast data)
 

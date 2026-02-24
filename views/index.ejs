@@ -19,9 +19,28 @@
 
     <!-- Search -->
     <section class="search">
-      <form action="/weather" method="POST">
-        <input type="text" name="location" placeholder= "<%= locals.noLocation ? noLocation : 'Enter city or location'%>" required/>
+      <form action="/weather" method="POST" class="form-wrapper">
+
+        <div class="search-container">
+          <input 
+            type="text" 
+            name="location" 
+            id="locationInput"
+            autocomplete="off"
+            placeholder="<%= locals.noLocation ? noLocation : 'Enter city or location'%>"
+            required
+          />
+
+          <!-- NEW hidden inputs -->
+          <input type="hidden" name="lat" id="latInput">
+          <input type="hidden" name="lon" id="lonInput">
+          <input type="hidden" name="displayName" id="displayNameInput">
+
+          <ul id="suggestions" class="dropdown"></ul>
+        </div>
+
         <button type="submit">Get Forecast</button>
+
       </form>
     </section>
 
@@ -36,12 +55,10 @@
     <% if (locals.weather && locals.location) { %>
       <section class="weather-card">
 
-        <!-- Location -->
         <div class="location">
           <h2><%= location %></h2>
         </div>
 
-        <!-- Current -->
         <div class="current">
           <span class="label">Now</span>
           <div class="temp">
@@ -49,37 +66,115 @@
           </div>
         </div>
 
-        <!-- Hourly -->
         <div class="hourly">
           <% Object.keys(groupedByDay).forEach(day => { %>
             <h3><%= day %></h3>
 
-            <ul>
-              <% groupedByDay[day].slice(0, 24).forEach((entry, index) => { %>
+            <ul class="list-padding">
+              <% groupedByDay[day].slice(0, 24).forEach((entry) => { %>
                 <li class="hour-item">
                   <span class="time"><%= entry.displayTime %></span>
 
                   <img
                     src="/icons/<%= entry.symbol %>.svg"
-                    alt="icon"
+                    alt="Weather icon"
                     onerror="this.src='/icons/cloudy.svg'"
                     class="weather-icon"
                   />
+
                   <h6><%= entry.symbol %></h6>
 
-                  <span>
+                  <span class="temperature">
                     <%= entry.data.instant.details.air_temperature %>°C
                   </span>
                 </li>
               <% }) %>
             </ul>
           <% }) %>
-
         </div>
       </section>
     <% } %>
 
   </main>
+
+
+  <footer class="app-footer">
+  © 2026 Skycast — Peter Opeyemi John
+</footer>
+<script>
+const input = document.getElementById("locationInput");
+const dropdown = document.getElementById("suggestions");
+const searchContainer = document.querySelector(".search-container");
+
+/* ===============================
+   DROPDOWN SUGGESTIONS
+================================ */
+
+input.addEventListener("input", async () => {
+  const value = input.value.trim();
+
+  if (value.length < 2) {
+    dropdown.innerHTML = "";
+    dropdown.classList.remove("show");
+    return;
+  }
+
+  try {
+    const res = await fetch(`/suggest?q=${value}`);
+    const data = await res.json();
+
+    dropdown.innerHTML = "";
+
+    if (!data.length) {
+      dropdown.classList.remove("show");
+      return;
+    }
+
+    data.forEach(item => {
+      const li = document.createElement("li");
+      li.textContent = `${item.name}, ${item.admin1 || ""}, ${item.country}`;
+
+      li.addEventListener("click", () => {
+        input.value = `${item.name}, ${item.country}`;
+
+        document.getElementById("latInput").value = item.latitude;
+        document.getElementById("lonInput").value = item.longitude;
+        document.getElementById("displayNameInput").value =
+          `${item.name}, ${item.country}`;
+
+        dropdown.innerHTML = "";
+        dropdown.classList.remove("show");
+      });
+
+      dropdown.appendChild(li);
+    });
+
+    dropdown.classList.add("show");
+
+  } catch (err) {
+    console.error("Suggestion error:", err);
+    dropdown.classList.remove("show");
+  }
+});
+
+
+/* ESC KEY CLOSE */
+input.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    dropdown.innerHTML = "";
+    dropdown.classList.remove("show");
+  }
+});
+
+
+/* CLICK OUTSIDE CLOSE */
+document.addEventListener("click", (e) => {
+  if (!searchContainer.contains(e.target)) {
+    dropdown.innerHTML = "";
+    dropdown.classList.remove("show");
+  }
+});
+</script>
 
 </body>
 </html>

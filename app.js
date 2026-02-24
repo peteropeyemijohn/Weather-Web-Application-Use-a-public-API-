@@ -4,10 +4,14 @@ import bodyParser from "body-parser";
 import rateLimit from "express-rate-limit"
 
 
+
+
+
+
 const app = express();
 app.set("trust proxy", 1); //enables express to see the real user IP for ratelimit//
 
-const PORT = process.env.PORT || 3000;
+const PORT =  3000;
 
 
 const limiter = rateLimit({
@@ -34,6 +38,8 @@ const axiosConfig = {
 };
 
 
+
+
 let cache = {};
 const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
 
@@ -45,68 +51,92 @@ app.get("/", (req, res) => {
 });
 
 
+
+
+app.get("/suggest", async (req, res) => {
+  const query = req.query.q?.trim();
+
+  if (!query || query.length < 2) {
+    return res.json([]);
+  }
+
+  try {
+    const response = await axios.get(
+      "https://geocoding-api.open-meteo.com/v1/search",
+      {
+        params: {
+          name: query,
+          count: 30,
+          language: "en",
+          format: "json"
+        }
+      }
+    );
+
+    const results = response.data.results || [];
+
+    const suggestions = results.map(r => ({
+      name: r.name,
+      country: r.country,
+      admin1: r.admin1,
+      latitude: r.latitude,
+      longitude: r.longitude
+    }));
+
+    res.json(suggestions);
+
+  } catch (error) {
+    console.error("Suggestion error:", error.message);
+    res.json([]);
+  }
+});
+
+
+
+
+
 app.post("/weather", async (req, res) => {
 
   try {
-        const geoResult = await axios.get("https://nominatim.openstreetmap.org/search",
-          {
-          params: {
-          q: req.body.location,
-          format: "json",
-          limit: 1,
-          },
 
-          ...axiosConfig
-          
-        });
-        
+    const lat = Number(req.body.lat);
+    const lon = Number(req.body.lon);
+    const locationName = req.body.displayName;
 
-        
-  
-        if (geoResult.data.length === 0) {
-         return res.render("index.ejs", {noLocation: "Location not found, try again"});
-        }
+    if (!lat || !lon) {
+      return res.render("index.ejs", {
+        noLocation: "Location not found, try suggestions."
+      });
+    }
 
+    const cacheKey = `${lat},${lon}`;
+    const now = Date.now();
 
-        const lat = Number( Number(geoResult.data[0].lat).toFixed(4) );
-        const lon = Number( Number(geoResult.data[0].lon).toFixed(4) );
+    if (cache[cacheKey] &&
+        now - cache[cacheKey].timestamp < CACHE_DURATION) {
+      console.log("Serving from cache");
+      return res.render("index.ejs", cache[cacheKey].data);
+    }
 
-        
+    const weatherResult = await axios.get(
+      "https://api.met.no/weatherapi/locationforecast/2.0/compact",
+      {
+        params: { lat, lon },
+        ...axiosConfig
+      }
+    );
 
-
-
-        const cacheKey = `${lat},${lon}`;
-        const now = Date.now();
-
-        // Check cache
-        if (cache[cacheKey] && (now - cache[cacheKey].timestamp < CACHE_DURATION)) {
-          console.log("Serving from cache");
-          return res.render("index.ejs", cache[cacheKey].data);
-        }
-
-
-
-        const weatherResult = await axios.get("https://api.met.no/weatherapi/locationforecast/2.0/compact", {
-
-          params: {lat, lon},
-
-          ...axiosConfig
-
-        });
-
-
-
-        const timeZone = await axios.get("https://api.open-meteo.com/v1/forecast", {
-
+    const timeZone = await axios.get(
+      "https://api.open-meteo.com/v1/forecast",
+      {
         params: {
           latitude: lat,
           longitude: lon,
           timezone: "auto",
         },
-
         ...axiosConfig
-
-      });
+      }
+    );
 
 
 
@@ -207,28 +237,31 @@ app.post("/weather", async (req, res) => {
 
       const renderData = {
         weather: weatherResult.data,
-        location: geoResult.data[0].display_name,
+        location: locationName,
         groupedByDay,
         isNight
       };
 
+      //save cache
+      cache[cacheKey] = {
+        data: renderData,
+        timestamp: now
+      };
 
-        // Save to cache
-        cache[cacheKey] = {
-          data: renderData,
-          timestamp: now
-        };
-
-        // Final render
-        res.render("index.ejs", renderData);
+      //final render
+      res.render("index.ejs", renderData);
 
 
 
   } catch(error) {
-    console.error(error.message);
-    res.render("index.ejs", {result: "Unable to fetch weather data." });
-  }
+      console.error("------ API ERROR ------");
+      console.error("Status:", error.response?.status);
+      console.error("URL:", error.config?.url);
+      console.error("Message:", error.message);
+      console.error("-----------------------");
 
+      res.render("index.ejs", {result: "Unable to fetch weather data. Please try again.",});
+    }
 });
 
 
