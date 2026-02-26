@@ -110,51 +110,75 @@ const searchContainer = document.querySelector(".search-container");
    DROPDOWN SUGGESTIONS
 ================================ */
 
-input.addEventListener("input", async () => {
+let debounceTimer;
+let currentController; // for aborting previous request
+
+input.addEventListener("input", () => {
   const value = input.value.trim();
 
+  // Clear previous debounce timer
+  clearTimeout(debounceTimer);
+
+  // If too short, reset dropdown immediately
   if (value.length < 2) {
     dropdown.innerHTML = "";
     dropdown.classList.remove("show");
     return;
   }
 
-  try {
-    const res = await fetch(`/suggest?q=${value}`);
-    const data = await res.json();
+  // Debounce delay (400ms)
+  debounceTimer = setTimeout(async () => {
+    try {
+      // Abort previous request if still running
+      if (currentController) {
+        currentController.abort();
+      }
 
-    dropdown.innerHTML = "";
+      currentController = new AbortController();
 
-    if (!data.length) {
-      dropdown.classList.remove("show");
-      return;
-    }
-
-    data.forEach(item => {
-      const li = document.createElement("li");
-      li.textContent = `${item.name}, ${item.admin1 || ""}, ${item.country}`;
-
-      li.addEventListener("click", () => {
-        input.value = `${item.name}, ${item.country}`;
-
-        document.getElementById("latInput").value = item.latitude;
-        document.getElementById("lonInput").value = item.longitude;
-        document.getElementById("displayNameInput").value =
-          `${item.name}, ${item.country}`;
-
-        dropdown.innerHTML = "";
-        dropdown.classList.remove("show");
+      const res = await fetch(`/suggest?q=${value}`, {
+        signal: currentController.signal
       });
 
-      dropdown.appendChild(li);
-    });
+      const data = await res.json();
 
-    dropdown.classList.add("show");
+      dropdown.innerHTML = "";
 
-  } catch (err) {
-    console.error("Suggestion error:", err);
-    dropdown.classList.remove("show");
-  }
+      if (!data.length) {
+        dropdown.classList.remove("show");
+        return;
+      }
+
+      data.forEach(item => {
+        const li = document.createElement("li");
+        li.textContent = `${item.name}, ${item.admin1 || ""}, ${item.country}`;
+
+        li.addEventListener("click", () => {
+          input.value = `${item.name}, ${item.country}`;
+
+          document.getElementById("latInput").value = item.latitude;
+          document.getElementById("lonInput").value = item.longitude;
+          document.getElementById("displayNameInput").value =
+            `${item.name}, ${item.country}`;
+
+          dropdown.innerHTML = "";
+          dropdown.classList.remove("show");
+        });
+
+        dropdown.appendChild(li);
+      });
+
+      dropdown.classList.add("show");
+
+    } catch (err) {
+      // Ignore abort errors (they are expected)
+      if (err.name !== "AbortError") {
+        console.error("Suggestion error:", err);
+      }
+      dropdown.classList.remove("show");
+    }
+
+  }, 400); // 400ms debounce
 });
 
 
